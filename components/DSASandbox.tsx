@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Problem, Language, JudgeResult } from '../types';
 import { executeCodeOnPiston } from '../services/pistonService';
 import OutputConsole from './OutputConsole';
-import { Play, RotateCcw, HelpCircle, Check, ArrowRight, Lightbulb, Loader2, CheckCircle2 } from 'lucide-react';
+import { Play, HelpCircle, ArrowRight, Lightbulb, Loader2, CheckCircle } from 'lucide-react';
 import { getSmartHint, getSolution } from '../services/geminiService';
 
 interface Props {
@@ -27,7 +27,7 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
   // Initialize code: Use saved code if available, otherwise default
   useEffect(() => {
     if (savedCode) {
-        setCode(savedCode);
+      setCode(savedCode);
     } else if (problem.initialCode && problem.initialCode[language]) {
       setCode(problem.initialCode[language] || '');
     } else {
@@ -43,14 +43,14 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
 
   // Save on unmount (optional, but good practice)
   useEffect(() => {
-      return () => {
-          if (code) onSave(code);
-      }
+    return () => {
+      if (code) onSave(code);
+    }
   }, [code, onSave]);
 
   const prepareCodeForJudge = (userCode: string, lang: Language): string => {
     const driver = problem.driverCode?.[lang] || '';
-    
+
     if (lang === Language.Python) {
       return `${userCode}\n\n${driver}`;
     } else if (lang === Language.C) {
@@ -72,8 +72,8 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
     setIsSolved(false);
 
     if (!problem.testCases) {
-        setIsJudgeRunning(false);
-        return;
+      setIsJudgeRunning(false);
+      return;
     }
 
     const finalSourceCode = prepareCodeForJudge(code, language);
@@ -83,30 +83,30 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
     let totalTime = 0;
 
     const addLog = (msg: string) => {
-        setLogs(prev => [...prev, msg]);
-        fullLogHistory.push(msg);
+      setLogs(prev => [...prev, msg]);
+      fullLogHistory.push(msg);
     };
 
     try {
       for (const [index, testCase] of problem.testCases.entries()) {
         const headerMsg = `\n>>> Running Test Case ${index + 1}/${problem.testCases.length}`;
         addLog(headerMsg);
-        
+
         const startTime = performance.now();
         const result = await executeCodeOnPiston(language, finalSourceCode, testCase.input);
         const endTime = performance.now();
         totalTime += (endTime - startTime);
 
         if (result.compile && result.compile.code !== 0) {
-            finalStatus = 'CE';
-            addLog(`COMPILATION ERROR:\n${result.compile.stderr || result.compile.stdout}`);
-            break;
+          finalStatus = 'CE';
+          addLog(`COMPILATION ERROR:\n${result.compile.stderr || result.compile.stdout}`);
+          break;
         }
-        
+
         if (result.run.code !== 0) {
-             finalStatus = 'RE';
-             addLog(`RUNTIME ERROR (Exit Code ${result.run.code}):\n${result.run.stderr}`);
-             break;
+          finalStatus = 'RE';
+          addLog(`RUNTIME ERROR (Exit Code ${result.run.code}):\n${result.run.stderr}`);
+          break;
         }
 
         const actualOutput = result.run.stdout.trim();
@@ -123,7 +123,7 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
           finalStatus = 'WA';
           addLog(`  Result:   ✘ FAILED`);
           if (result.run.stderr) {
-              addLog(`  Stderr:   ${result.run.stderr}`);
+            addLog(`  Stderr:   ${result.run.stderr}`);
           }
           break;
         }
@@ -134,7 +134,7 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
     }
 
     setIsJudgeRunning(false);
-    
+
     setJudgeResult({
       status: finalStatus,
       passedCases: passedCount,
@@ -173,61 +173,59 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
       <div className="flex justify-between items-center p-4 border-b border-secondary/20 bg-surface">
         <div>
           <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-white">{problem.title}</h2>
-              {isSolved && (
-                  <span className="flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/30 font-bold animate-in fade-in zoom-in">
-                      <CheckCircle2 size={12} /> SOLVED
-                  </span>
-              )}
+            <h2 className="text-xl font-bold text-white">{problem.title}</h2>
+            {isSolved && (
+              <span className="flex items-center gap-1 text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/30 font-bold animate-in fade-in zoom-in">
+                <CheckCircle size={12} /> SOLVED
+              </span>
+            )}
           </div>
           <div className="flex gap-2 mt-1">
-            <span className={`text-xs px-2 py-0.5 rounded ${
-              problem.difficulty === 'Beginner' ? 'bg-accent/20 text-accent' :
+            <span className={`text-xs px-2 py-0.5 rounded ${problem.difficulty === 'Beginner' ? 'bg-accent/20 text-accent' :
               problem.difficulty === 'Intermediate' ? 'bg-warning/20 text-warning' :
-              'bg-danger/20 text-danger'
-            }`}>{problem.difficulty}</span>
+                'bg-danger/20 text-danger'
+              }`}>{problem.difficulty}</span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-400">Language:</span>
-            <select 
-                value={language} 
-                onChange={(e) => setLanguage(e.target.value as Language)}
-                className="bg-black/30 border border-secondary/30 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary text-gray-200"
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as Language)}
+              className="bg-black/30 border border-secondary/30 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-primary text-gray-200"
             >
-                <option value={Language.Python}>Python 3.10</option>
-                <option value={Language.Java}>Java 15</option>
-                <option value={Language.C}>C (GCC)</option>
+              <option value={Language.Python}>Python 3.10</option>
+              <option value={Language.Java}>Java 15</option>
+              <option value={Language.C}>C (GCC)</option>
             </select>
           </div>
 
-          <button 
-            onClick={getHint} 
+          <button
+            onClick={getHint}
             disabled={loadingAI}
             className="flex items-center gap-2 px-3 py-1.5 rounded border border-warning/30 text-warning hover:bg-warning/10 text-sm transition-colors disabled:opacity-50"
           >
-            {loadingAI ? <Loader2 size={14} className="animate-spin" /> : hintLevel >= 3 ? <span className="flex items-center gap-1"><Lightbulb size={14}/> Show Solution</span> : <span className="flex items-center gap-1"><HelpCircle size={14}/> Hint ({3 - hintLevel} left)</span>}
+            {loadingAI ? <Loader2 size={14} className="animate-spin" /> : hintLevel >= 3 ? <span className="flex items-center gap-1"><Lightbulb size={14} /> Show Solution</span> : <span className="flex items-center gap-1"><HelpCircle size={14} /> Hint ({3 - hintLevel} left)</span>}
           </button>
 
-          <button 
+          <button
             onClick={handleRun}
             disabled={isJudgeRunning}
-            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all shadow-lg ${
-                isJudgeRunning 
-                ? 'bg-secondary cursor-not-allowed text-gray-300' 
-                : isSolved ? 'bg-accent hover:bg-emerald-600 text-white shadow-accent/20' : 'bg-primary hover:bg-blue-600 text-white shadow-primary/20'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-all shadow-lg ${isJudgeRunning
+              ? 'bg-secondary cursor-not-allowed text-gray-300'
+              : isSolved ? 'bg-accent hover:bg-emerald-600 text-white shadow-accent/20' : 'bg-primary hover:bg-blue-600 text-white shadow-primary/20'
+              }`}
           >
             {isJudgeRunning ? (
-                <>
-                    <Loader2 size={16} className="animate-spin" /> Running...
-                </>
+              <>
+                <Loader2 size={16} className="animate-spin" /> Running...
+              </>
             ) : (
-                <>
-                    <Play size={16} fill="currentColor" /> {isSolved ? 'Run Again' : 'Run Code'}
-                </>
+              <>
+                <Play size={16} fill="currentColor" /> {isSolved ? 'Run Again' : 'Run Code'}
+              </>
             )}
           </button>
         </div>
@@ -257,22 +255,22 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
 
           {aiMessage && (
             <div className="mt-4 p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg animate-in fade-in slide-in-from-bottom-2">
-               <h4 className="flex items-center gap-2 text-blue-400 font-bold mb-2 text-sm">
-                 <Lightbulb size={16} /> AI Assistant
-               </h4>
-               <p className="text-sm text-gray-200 whitespace-pre-wrap">{aiMessage}</p>
+              <h4 className="flex items-center gap-2 text-blue-400 font-bold mb-2 text-sm">
+                <Lightbulb size={16} /> AI Assistant
+              </h4>
+              <p className="text-sm text-gray-200 whitespace-pre-wrap">{aiMessage}</p>
             </div>
           )}
         </div>
 
         {/* Code Editor Side */}
         <div className="flex-1 relative flex flex-col">
-           {/* Simple IDE Header */}
-           <div className="bg-[#0d1117] border-b border-white/5 px-4 py-2 text-xs text-gray-500 font-mono">
-             {language === Language.Python && 'main.py'}
-             {language === Language.Java && 'Main.java'}
-             {language === Language.C && 'main.c'}
-           </div>
+          {/* Simple IDE Header */}
+          <div className="bg-[#0d1117] border-b border-white/5 px-4 py-2 text-xs text-gray-500 font-mono">
+            {language === Language.Python && 'main.py'}
+            {language === Language.Java && 'Main.java'}
+            {language === Language.C && 'main.c'}
+          </div>
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
@@ -283,11 +281,11 @@ const DSASandbox: React.FC<Props> = ({ problem, onComplete, onSave, savedCode })
         </div>
       </div>
 
-      <OutputConsole 
-        logs={logs} 
-        judgeResult={judgeResult} 
-        isOpen={consoleOpen} 
-        onToggle={() => setConsoleOpen(!consoleOpen)} 
+      <OutputConsole
+        logs={logs}
+        judgeResult={judgeResult}
+        isOpen={consoleOpen}
+        onToggle={() => setConsoleOpen(!consoleOpen)}
       />
     </div>
   );
